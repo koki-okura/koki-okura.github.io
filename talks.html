@@ -1,0 +1,16 @@
+---
+layout: default
+title: Talks - Koki Okura's Home Page
+---
+<h2>Talks</h2>
+
+<ol reversed>
+    {% for talk in site.data.talks %}
+        <li>
+            <strong>{{ talk.title }}</strong>
+            {% if talk.slides %}[<a href="/slides/{{ talk.slides }}.pdf">slides</a>]{% endif %}
+            <br>
+            {% if talk.url %}<a href="{{ talk.url }}" target="_blank">{{ talk.event }}</a>{% else %}{{ talk.event }}{% endif %} ({{ talk.place }}, {{ talk.date }})
+        </li>
+    {% endfor %}
+</ol>
