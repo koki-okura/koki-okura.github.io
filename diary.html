@@ -1,0 +1,25 @@
+---
+layout: default
+title: Diary Archive - Koki Okura's Home Page
+---
+
+<h2>Diary Archive</h2>
+
+{% assign postsByYear = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
+
+{% for yearGroup in postsByYear %}
+  <h3 class="archive-year">{{ yearGroup.name }}</h3>
+  
+  <div class="archive-list">
+    {% for post in yearGroup.items %}
+      <div class="diary-entry">
+        <div class="diary-header">
+          <span class="diary-date">{{ post.date | date: "%Y/%m/%d" }}</span>
+        </div>
+        <div class="diary-body">
+          {{ post.content }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endfor %}

@@ -2,12 +2,41 @@
 layout: default
 title: Koki Okura's Home Page
 ---
-<h2>Welcome</h2>
+<h2>Welcome to Koki Okura's Home Page!</h2>
 
-...to nothing
+I am a PhD student at the University of Tsukuba, working in model theory.
+
+<h2>What's New</h2>
+<div class="news-box">
+  <ul class="news-list">
+    {% for item in site.data.news %}
+      <li>
+        <span class="news-date">{{ item.date | date: "%Y/%m/%d" }}</span>
+        <span class="news-text">{{ item.text }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<h2>Diary</h2>
+
+{% for post in site.posts limit:3 %}
+  <div class="diary-entry">
+    <div class="diary-header">
+      <span class="diary-date">{{ post.date | date: "%Y/%m/%d" }}</span>
+    </div>
+    <div class="diary-body">
+      {{ post.content }}
+    </div>
+  </div>
+{% endfor %}
+
+<p style="text-align: right; font-size: 13.5px;">
+  <a href="diary.html">&gt;&gt; Archive</a>
+</p>
 
 <hr>
 <p align="right">
-    <font size="2">Since: 20XX/XX/XX<br>
-    Last Update: 2026/08/21</font>
+    <font size="2">Since: 2026/08/22<br>
+    Last Update: 2026/08/22</font>
 </p>

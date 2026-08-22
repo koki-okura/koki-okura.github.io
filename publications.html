@@ -4,7 +4,7 @@ title: Publications - Koki Okura's Home Page
 ---
 <h2>Papers</h2>
 
-<ol reversed>
+<ol class="publications-list" reversed>
     {% for paper in site.data.papers %}
         <li>
             <strong>{{ paper.title }}</strong>
@@ -13,9 +13,9 @@ title: Publications - Koki Okura's Home Page
     {% endfor %}
 </ol>
 
-<h2>Conference proceedings</h2>
+<h2>Conference Proceedings</h2>
 
-<ol reversed>
+<ol class="publications-list" reversed>
     {% for proceedings in site.data.proceedings %}
         <li>
             <strong>{{ proceedings.title }}</strong>{% if proceedings.hdl %} [<a href="{{ proceedings.hdl }}" target="_blank">Handle</a>]{% endif %}{% if proceedings.url %} [<a href="{{ proceedings.url }}" target="_blank">Link</a>]{% endif %}<br>
