@@ -1,3 +1,7 @@
+html {
+    scrollbar-gutter: stable;
+}
+
 body {
     background-color: #f7f4ea;
     background-image: 
@@ -13,6 +17,10 @@ body {
 a:link { color: #5a7d9a; text-decoration: underline; }
 a:visited { color: #8c708a; text-decoration: underline; }
 a:hover { color: #e06060; background-color: #fff0f0; }
+
+.email-protect span::before {
+    content: "@";
+}
 
 .site-header-bordered {
     width: 820px;
@@ -127,6 +135,79 @@ hr {
     font-weight: bold;
 }
 
+.cv-info {
+    list-style-type: none;
+    padding: 0;
+    margin: 10px 0 25px 0;
+}
+
+.cv-info li {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dotted #e6decb;
+    font-size: 15.5px;
+    line-height: 1.5;
+}
+
+.cv-info li:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.cv-label {
+    flex: 0 0 110px;
+    font-weight: bold;
+    color: #554433;
+    font-family: inherit;
+}
+
+.cv-value {
+    flex: 1;
+    color: #4a4035;
+}
+
+.cv-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 10px 0 20px 0;
+}
+
+.cv-list li {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #d6cbb8;
+    font-size: 15.5px;
+    line-height: 1.5;
+}
+
+.cv-list li:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.cv-period {
+    flex: 0 0 110px;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    color: #8c7b6d;
+}
+
+.cv-detail {
+    flex: 1;
+}
+
+.cv-detail strong {
+    color: #4a3b2c;
+}
+
+.cv-detail em {
+    color: #554433;
+}
+
 .news-box {
     height: 120px;
     overflow-y: auto;
@@ -208,4 +289,63 @@ hr {
 
 .archive-list {
     margin-bottom: 30px;
+}
+
+.link-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.link-list li {
+    margin-bottom: 6px;
+    padding-bottom: 0;
+    font-size: 15.5px;
+    line-height: 1.5;
+}
+
+.link-list li::before {
+    content: "・";
+    color: #bda891;
+    margin-right: 4px;
+}
+
+.link-list li:last-child {
+    margin-bottom: 0;
+}
+
+.accordion-box {
+    background-color: #ffffff;
+    border: 1px solid #e6decb;
+    margin-bottom: 10px;
+}
+
+.accordion-title {
+    padding: 6px 12px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #554433;
+    cursor: pointer;
+    background-color: #faf7f0;
+    user-select: none;
+    outline: none;
+    transition: background-color 0.2s;
+}
+
+.accordion-title:hover {
+    background-color: #f3ede2;
+    color: #4a3b2c;
+}
+
+.accordion-title::marker {
+    color: #8c7b6d;
+}
+
+.accordion-box[open] .accordion-title {
+    border-bottom: 1px dotted #d6cbb8;
+}
+
+.accordion-content {
+    padding: 10px 14px 8px 14px;
+    background-color: #ffffff;
 }

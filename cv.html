@@ -1,0 +1,104 @@
+---
+layout: default
+title: Koki Okura's Home Page
+---
+<ul class="cv-info">
+    <li>
+        <span class="cv-label">Name:</span>
+        <div class="cv-value">
+            Koki Okura (大倉 昂貴)
+        </div>
+    </li>
+    <li>
+        <span class="cv-label">Research Interests:</span>
+        <div class="cv-value">
+            Model theory of ordered or valued algebraic structures (groups, fields, etc.)
+        </div>
+    </li>
+    <li>
+        <span class="cv-label">Date of Birth:</span>
+        <div class="cv-value">
+            January 9th, 1996
+        </div>
+    </li>
+    <li>
+        <span class="cv-label">Nationality:</span>
+        <div class="cv-value">
+            Japan
+        </div>
+    </li>
+</ul>
+
+<h2>Contact Information</h2>
+<ul class="cv-info">
+    <li>
+        <span class="cv-label">Address:</span>
+        <div class="cv-value">
+            Doctoral Program in Mathematics, Graduate School of Science and Technology, Degree Programs in Pure and Applied Sciences, University of Tsukuba<br>
+            1-1-1 Tennodai, Tsukuba, Ibaraki 305-8577 Japan
+        </div>
+    </li>
+    <li>
+        <span class="cv-label">Email: </span>
+        <div class="cv-value">
+            <span class="email-protect">k_okura<span></span>math.tsukuba.ac.jp</span>
+        </div>
+    </li>
+</ul>
+
+<h2>Education</h2>
+<ul class="cv-list">
+    <li>
+        <span class="cv-period">2024–</span>
+        <div class="cv-detail">
+            <strong>Doctor of Philosophy in Science</strong><br>
+            Doctoral Program in Mathematics, Graduate School of Science and Technology, Degree Programs in Pure and Applied Sciences, University of Tsukuba<br>
+            Advisor: Kota Takeuchi
+        </div>
+    </li>
+    <li>
+        <span class="cv-period">2022–2024</span>
+        <div class="cv-detail">
+            <strong>Master of Science</strong><br>
+            Master's Program in Mathematics, Graduate School of Science and Technology, Degree Programs in Pure and Applied Sciences, University of Tsukuba<br>
+            Advisor: Kota Takeuchi<br>
+            Thesis: <em>A construction of NIP expansions of the $p$-adic fields without the rationality of Poincaré series</em>
+        </div>
+    </li>
+    <li>
+        <span class="cv-period">2018–2022</span>
+        <div class="cv-detail">
+            <strong>Bachelor of Science</strong><br>
+            College of Mathematics, School of Science and Engineering, University of Tsukuba
+        </div>
+    </li>
+</ul>
+
+<h2>Grants and Fellowships</h2>
+<ul class="cv-list">
+    <li>
+        <span class="cv-period">2024–2027</span>
+        <div class="cv-detail">
+            JST SPRING Fellowship
+        </div>
+    </li>
+</ul>
+
+<h2>Conferences Organized</h2>
+<ol class="publications-list" reversed>
+    {% for conference in site.data.organized %}
+        <li>
+            {% if conference.url %}<a href="{{ conference.url }}" target="_blank">{{ conference.event }}</a>{% else %}{{ conference.event }}{% endif %}, {{ conference.place }}, {{ conference.date }} ({{ conference.role }}{% if conference.with %}, with {{ conference.with }}{% endif %})
+        </li>
+    {% endfor %}
+</ol>
+
+<h2>Membership</h2>
+<ul class="cv-list">
+    <li>
+        <span class="cv-period">2024–</span>
+        <div class="cv-detail">
+            The Mathematical Society of Japan
+        </div>
+    </li>
+</ul>

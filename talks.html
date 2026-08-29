@@ -10,7 +10,7 @@ title: Talks - Koki Okura's Home Page
             <strong>{{ talk.title }}</strong>
             {% if talk.slides %}[<a href="/slides/{{ talk.slides }}.pdf">slides</a>]{% endif %}
             <br>
-            {% if talk.url %}<a href="{{ talk.url }}" target="_blank">{{ talk.event }}</a>{% else %}{{ talk.event }}{% endif %} ({{ talk.place }}, {{ talk.date }})
+            {% if talk.url %}<a href="{{ talk.url }}">{{ talk.event }}</a>{% else %}{{ talk.event }}{% endif %} ({{ talk.place }}, {{ talk.date }})
         </li>
     {% endfor %}
 </ol>
