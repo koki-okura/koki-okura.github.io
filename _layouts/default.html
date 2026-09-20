@@ -1,10 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ page.title }}</title>
+    {% if page.title %}
+      {% assign full_title = page.title | append: " - " | append: site.title %}
+    {% else %}
+      {% assign full_title = site.title %}
+    {% endif %}
+    <title>{{ full_title }}</title>
+    <meta name="description" content="{{ site.description | escape }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="style.css">
+    <meta property="og:title" content="{{ full_title | escape }}">
+    <meta property="og:description" content="{{ site.description | escape }}">
+    <meta property="og:url" content="{{ page.url | absolute_url }}">
+    <meta property="og:type" content="website">
+
+    <link rel="canonical" href="{{ page.url | absolute_url }}">
+    <link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
 
     <script>
         window.MathJax = {

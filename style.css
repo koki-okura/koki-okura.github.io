@@ -6,7 +6,7 @@ body {
     background-color: #f7f4ea;
     background-image: 
         linear-gradient(rgba(253, 251, 247, 0.9), rgba(253, 251, 247, 0.9)),
-        url("images/bg.png");
+        url("/images/bg.png");
     background-repeat: repeat;
     color: #4a4035;
     font-family: "MS Pゴシック", "MS PGothic", sans-serif;
