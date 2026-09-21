@@ -291,27 +291,66 @@ hr {
     margin-bottom: 30px;
 }
 
-.link-list {
-    list-style-type: none;
+.entry-list {
+    list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.link-list li {
+.entry-list li {
+    list-style: none;
     margin-bottom: 6px;
     padding-bottom: 0;
     font-size: 15.5px;
     line-height: 1.5;
 }
 
-.link-list li::before {
+.entry-list li::before {
     content: "・";
     color: #bda891;
     margin-right: 4px;
 }
 
-.link-list li:last-child {
+.entry-list li:last-child {
     margin-bottom: 0;
+}
+
+.entry-dated {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 12px;
+}
+
+.entry-list li.entry-dated::before,
+.entry-list li.entry-dated::marker {
+    content: none;
+}
+
+.entry-dated:last-child {
+    margin-bottom: 0;
+}
+
+.entry-date {
+    flex: 0 0 4.5em;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    color: #8c7b6d;
+    margin-right: 10px;
+}
+
+.entry-body {
+    flex: 1;
+}
+
+.entry-list li > .entry-desc {
+    margin-left: 1em;
+}
+
+.entry-desc {
+    display: block;
+    margin-top: 2px;
+    font-size: 13.5px;
+    color: #6a5d4d;
 }
 
 .accordion-box {
