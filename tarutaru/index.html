@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="タルタル">
+  <meta name="theme-color" content="#181c24">
+  <title>タルタル 記録用</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="pyodide/pyodide.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main id="app">
+    <header class="status">
+      <div><span class="label">得点</span><span id="score">0</span></div>
+      <div><span class="label">本数</span><span id="lines">0</span></div>
+      <div><span class="label">残り</span><span id="time">0.0</span></div>
+    </header>
+    <p class="sub"><span id="seed"></span><span id="wait"></span></p>
+
+    <section class="board-wrap">
+      <div class="corner"></div>
+      <div class="col-marks" id="col-marks"></div>
+      <div class="row-marks" id="row-marks"></div>
+      <div class="cells" id="cells"></div>
+    </section>
+
+    <p class="hint">行は横に、列は縦にスワイプして寄せる</p>
+
+    <nav class="controls">
+      <button id="undo" type="button">戻る</button>
+      <button id="new-game" type="button">新しいゲーム</button>
+      <button id="open-records" type="button">記録</button>
+    </nav>
+  </main>
+
+  <div class="overlay" id="loading">
+    <div class="panel">
+      <p class="big">タルタル</p>
+      <p id="loading-text">読み込み中…</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="finished">
+    <div class="panel">
+      <p class="big">終了</p>
+      <p>得点 <span id="final-score"></span></p>
+      <p class="muted" id="final-note"></p>
+      <div class="row-buttons">
+        <button id="finished-undo" type="button">戻る</button>
+        <button id="next-game" type="button">次のゲーム</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="records">
+    <div class="panel">
+      <p class="big">記録</p>
+      <p id="records-summary"></p>
+      <div class="column-buttons">
+        <button id="export" type="button">書き出す</button>
+        <button id="delete-exported" type="button">書き出した記録を消す</button>
+        <button id="close-records" type="button">閉じる</button>
+      </div>
+      <p class="muted small" id="version"></p>
+    </div>
+  </div>
+</body>
+</html>

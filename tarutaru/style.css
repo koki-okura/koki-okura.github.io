@@ -1,0 +1,218 @@
+:root {
+  --background: rgb(24, 28, 36);
+  --board: rgb(58, 40, 32);
+  --well: rgb(36, 26, 22);
+  --ink: rgb(244, 236, 220);
+  --muted: rgb(196, 184, 164);
+  --marker: rgb(255, 214, 96);
+  --cell: min(54px, calc((100vw - 52px) / 6));
+  --gutter: 18px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--background);
+  color: var(--ink);
+  font-family: -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  width: calc(var(--cell) * 6 + var(--gutter) + 8px);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  margin-right: 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.sub {
+  display: flex;
+  justify-content: space-between;
+  width: calc(var(--cell) * 6 + var(--gutter) + 8px);
+  margin: 6px 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.board-wrap {
+  display: grid;
+  grid-template-columns: var(--gutter) calc(var(--cell) * 6);
+  grid-template-rows: var(--gutter) calc(var(--cell) * 6);
+  padding: 4px 8px 8px 4px;
+  border-radius: 14px;
+  background: var(--board);
+}
+
+.col-marks, .row-marks {
+  display: grid;
+}
+
+.col-marks {
+  grid-template-columns: repeat(6, var(--cell));
+}
+
+.row-marks {
+  grid-template-rows: repeat(6, var(--cell));
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 12px;
+}
+
+.mark.on {
+  color: var(--marker);
+}
+
+.cells {
+  display: grid;
+  grid-template-columns: repeat(6, var(--cell));
+  grid-template-rows: repeat(6, var(--cell));
+  touch-action: none;
+}
+
+.cell {
+  position: relative;
+  margin: 3px;
+  border-radius: 9px;
+  background: var(--well);
+}
+
+.cell.chosen {
+  background: rgb(78, 60, 40);
+}
+
+.cell.cursor-row, .cell.cursor-col {
+  box-shadow: inset 0 0 0 1px rgba(255, 214, 96, 0.28);
+}
+
+.barrel {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.barrel.c1 { background: radial-gradient(circle at 34% 30%, rgb(255, 120, 110) 0 18%, rgb(214, 54, 48) 19%); }
+.barrel.c2 { background: radial-gradient(circle at 34% 30%, rgb(110, 170, 255) 0 18%, rgb(46, 104, 214) 19%); }
+.barrel.c3 { background: radial-gradient(circle at 34% 30%, rgb(255, 240, 140) 0 18%, rgb(240, 196, 48) 19%); }
+.barrel.c4 { background: radial-gradient(circle at 34% 30%, rgb(110, 230, 140) 0 18%, rgb(46, 168, 82) 19%); }
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+button {
+  min-width: 96px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: rgb(58, 64, 78);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  touch-action: manipulation;
+}
+
+button:active {
+  background: rgb(80, 88, 106);
+}
+
+button:disabled {
+  opacity: 0.4;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 14, 18, 0.72);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.panel {
+  min-width: 260px;
+  max-width: calc(100vw - 32px);
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: var(--background);
+  text-align: center;
+}
+
+.panel p {
+  margin: 8px 0;
+  white-space: pre-line;
+}
+
+.big {
+  font-size: 30px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.row-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.column-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
