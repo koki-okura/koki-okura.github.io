@@ -24,6 +24,7 @@ let gesture = null;
 let savedId = null;
 let notice = "";
 let advancing = false;
+let stopRequested = false;
 const cellViews = [];
 
 const $ = (id) => document.getElementById(id);
@@ -153,7 +154,7 @@ function bindControls() {
     if (!confirm("交代をやめて、記録用モードに戻りますか？")) return;
     leaveCoach();
   });
-  $("skip").addEventListener("click", skipCoach);
+  $("skip").addEventListener("click", onCoachAction);
   $("coach-next").addEventListener("click", nextCoachSeed);
   $("open-records").addEventListener("click", () => {
     renderRecords();
@@ -253,6 +254,22 @@ function nextCoachSeed() {
   advancePolicy();
 }
 
+function onCoachAction() {
+  if (mode !== "coach" || !coach) return;
+  const phase = JSON.parse(coach.state_json()).phase;
+  if (phase === "policy") {
+    stopRequested = true;
+    if (!advancing) {
+      coach.take_over();
+      stopRequested = false;
+      persist();
+      render();
+    }
+    return;
+  }
+  skipCoach();
+}
+
 function skipCoach() {
   if (mode !== "coach" || !coach || advancing || !coach.skip()) return;
   persist();
@@ -267,9 +284,14 @@ function sleep() {
 async function advancePolicy() {
   if (mode !== "coach" || !coach || advancing) return;
   advancing = true;
-  $("policy").classList.remove("hidden");
+  stopRequested = false;
   try {
     while (mode === "coach" && coach) {
+      if (stopRequested) {
+        stopRequested = false;
+        coach.take_over();
+        break;
+      }
       const job = JSON.parse(coach.begin_policy_move_json());
       if (job.kind !== "score") break;
       const scores = TarutaruCnn.scoreBatch(job.planes, job.lines, job.count, weights);
@@ -281,7 +303,6 @@ async function advancePolicy() {
     notice = `方策が止まりました: ${error.message || error}`;
   } finally {
     advancing = false;
-    if (mode === "coach") $("policy").classList.add("hidden");
     persist();
     render();
   }
@@ -385,7 +406,9 @@ function render() {
   } else {
     $("wait").textContent = "マスに触れると待ちを表示";
   }
-  if (coaching && state.phase === "human" && state.allowed) {
+  if (coaching && state.phase === "policy") {
+    $("hint").textContent = `方策が進めています ${state.progress}手`;
+  } else if (coaching && state.phase === "human" && state.allowed) {
     $("hint").textContent = notice || `${state.allowed}本を消す`;
   } else if (coaching && state.phase === "finished") {
     $("hint").textContent = state.reason || "終了";
@@ -408,11 +431,13 @@ function render() {
   [...$("row-marks").children].forEach((mark, index) => mark.classList.toggle("on", index === state.row_cursor));
 
   const finished = coaching ? state.phase === "finished" : state.done;
+  const policyPlaying = coaching && state.phase === "policy";
   $("undo").textContent = `戻る (${state.undo_left})`;
-  $("undo").disabled = advancing || state.undo_left === 0 || finished;
+  $("undo").disabled = policyPlaying || state.undo_left === 0 || finished;
   $("finished-undo").disabled = state.undo_left === 0;
-  $("skip").classList.toggle("hidden", !coaching);
-  $("skip").disabled = advancing || !state.can_skip;
+  $("skip").classList.toggle("hidden", !coaching || finished);
+  $("skip").textContent = policyPlaying ? "交代する" : "任せる";
+  $("skip").disabled = policyPlaying ? false : !state.can_skip;
   $("new-game").classList.toggle("hidden", coaching);
   $("coach").classList.toggle("hidden", coaching);
   $("record-mode").classList.toggle("hidden", !coaching);
@@ -428,9 +453,6 @@ function render() {
   $("finished-undo").classList.toggle("hidden", coaching);
   $("next-game").classList.toggle("hidden", coaching);
   $("coach-next").classList.toggle("hidden", !coaching);
-  if (coaching && advancing) {
-    $("policy-text").textContent = `方策が進めています\n最後の得点から ${state.since_score}/${state.policy_moves} 手`;
-  }
 }
 
 function renderRecords() {
@@ -439,20 +461,11 @@ function renderRecords() {
   const waiting = records.filter((record) => !record.exported).length;
   const repairWaiting = repairs.filter((record) => !record.exported).length;
   $("records-summary").textContent =
-    `完成局 ${records.length} 件（未書き出し ${waiting} 件）\n交代の記録 ${repairs.length} 件（未書き出し ${repairWaiting} 件）`;
+    `スマホにある記録 ${records.length + repairs.length} 件\nまだ書き出していない記録 ${waiting + repairWaiting} 件`;
   $("export").disabled = records.length === 0;
-  $("delete-exported").disabled = records.length === waiting;
+  $("delete-exported").disabled = records.filter((record) => record.exported).length === 0;
   $("export-repairs").disabled = repairs.length === 0;
-  $("delete-repairs").disabled = repairs.length === repairWaiting;
-  $("version").textContent = `ゲームのコード ${version.code} ・ 組み立て ${version.build}`;
-}
-
-function renderRecords() {
-  const records = loadRecords();
-  const waiting = records.filter((record) => !record.exported).length;
-  $("records-summary").textContent = `スマホにある記録 ${records.length} 件\nまだ書き出していない記録 ${waiting} 件`;
-  $("export").disabled = records.length === 0;
-  $("delete-exported").disabled = records.length === waiting;
+  $("delete-repairs").disabled = repairs.filter((record) => record.exported).length === 0;
   $("version").textContent = `ゲームのコード ${version.code} ・ 組み立て ${version.build}`;
 }
 

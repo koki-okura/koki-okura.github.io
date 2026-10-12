@@ -520,9 +520,21 @@ class CoachSession:
             return
         if tips_allowed_counts(self.game.lines_cleared) is None:
             self._finish("流れから外れました")
-            return
-        if self.since_score >= self.budget:
-            self._handoff()
+
+    def take_over(self) -> bool:
+        """方策の進行を止めて、人間に渡す。"""
+
+        self._pending = None
+        if self.phase != "policy":
+            return False
+        if self.game.done:
+            self._finish("時間切れ")
+            return False
+        if tips_allowed_counts(self.game.lines_cleared) is None:
+            self._finish("流れから外れました")
+            return False
+        self._handoff()
+        return True
 
     def _handoff(self) -> None:
         self.phase = "human"
