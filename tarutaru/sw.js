@@ -1,17 +1,20 @@
 "use strict";
 
 // 置き場の名前と写すファイルは tarutaru.build_web が埋める。中身が変わると名前も変わり、古い置き場は消える。
-const CACHE = "tarutaru-88e4010efd47";
+const CACHE = "tarutaru-cfce563360c3";
 const FILES = [
   "./",
   "version.json",
   "app.js",
+  "cnn.js",
+  "cnn_small.json",
   "icon-180.png",
   "icon-512.png",
   "index.html",
   "manifest.webmanifest",
   "py/game.py",
   "py/rules.py",
+  "py/web_coach.py",
   "py/web_session.py",
   "pyodide/pyodide-lock.json",
   "pyodide/pyodide.asm.mjs",

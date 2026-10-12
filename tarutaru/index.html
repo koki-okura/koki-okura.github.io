@@ -14,6 +14,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="stylesheet" href="style.css">
   <script src="pyodide/pyodide.js"></script>
+  <script src="cnn.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -32,11 +33,14 @@
       <div class="cells" id="cells"></div>
     </section>
 
-    <p class="hint">行は横に、列は縦にスワイプして寄せる</p>
+    <p class="hint" id="hint">行は横に、列は縦にスワイプして寄せる</p>
 
     <nav class="controls">
       <button id="undo" type="button">戻る</button>
+      <button id="skip" type="button" class="hidden">任せる</button>
       <button id="new-game" type="button">新しいゲーム</button>
+      <button id="coach" type="button">交代</button>
+      <button id="record-mode" type="button" class="hidden">記録モード</button>
       <button id="open-records" type="button">記録</button>
     </nav>
   </main>
@@ -50,23 +54,32 @@
 
   <div class="overlay hidden" id="finished">
     <div class="panel">
-      <p class="big">終了</p>
+      <p class="big" id="finished-title">終了</p>
       <p>得点 <span id="final-score"></span></p>
       <p class="muted" id="final-note"></p>
       <div class="row-buttons">
         <button id="finished-undo" type="button">戻る</button>
         <button id="next-game" type="button">次のゲーム</button>
+        <button id="coach-next" type="button" class="hidden">次の種</button>
       </div>
     </div>
   </div>
 
+  <div class="overlay hidden" id="policy">
+    <div class="panel">
+      <p class="big">方策</p>
+      <p id="policy-text">方策が進めています</p>
+    </div>
+  </div>
   <div class="overlay hidden" id="records">
     <div class="panel">
       <p class="big">記録</p>
       <p id="records-summary"></p>
       <div class="column-buttons">
-        <button id="export" type="button">書き出す</button>
-        <button id="delete-exported" type="button">書き出した記録を消す</button>
+        <button id="export" type="button">完成局を書き出す</button>
+        <button id="delete-exported" type="button">書き出した完成局を消す</button>
+        <button id="export-repairs" type="button">交代の記録を書き出す</button>
+        <button id="delete-repairs" type="button">書き出した交代の記録を消す</button>
         <button id="close-records" type="button">閉じる</button>
       </div>
       <p class="muted small" id="version"></p>

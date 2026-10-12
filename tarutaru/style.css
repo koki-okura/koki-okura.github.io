@@ -139,8 +139,14 @@ body {
 
 .controls {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
   margin-top: auto;
+}
+
+button.hidden {
+  display: none;
 }
 
 button {

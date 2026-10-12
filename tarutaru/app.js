@@ -2,20 +2,28 @@
 
 // ゲームの進行はすべて Python の tarutaru.web_session が持つ。ここは画面と保存だけ。
 const RECORDS_KEY = "tarutaru-records";
+const REPAIRS_KEY = "tarutaru-repairs";
 const CURRENT_KEY = "tarutaru-current";
-const PYTHON_FILES = ["rules.py", "game.py", "web_session.py"];
+const COACH_KEY = "tarutaru-coach";
+const PYTHON_FILES = ["rules.py", "game.py", "web_session.py", "web_coach.py"];
 const PACKAGE_DIR = "/home/pyodide/tarutaru";
 const FPS = 60;
 const SIZE = 6;
 const SWIPE_PX = 22;
 
 let web = null;
+let coachMod = null;
+let weights = null;
 let session = null;
+let coach = null;
+let mode = "record";
 let state = null;
 let version = { code: "?", build: "?" };
 let chosen = null;
 let gesture = null;
 let savedId = null;
+let notice = "";
+let advancing = false;
 const cellViews = [];
 
 const $ = (id) => document.getElementById(id);
@@ -30,6 +38,18 @@ function loadRecords() {
 
 function storeRecords(records) {
   localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+}
+
+function loadRepairs() {
+  try {
+    return JSON.parse(localStorage.getItem(REPAIRS_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function storeRepairs(records) {
+  localStorage.setItem(REPAIRS_KEY, JSON.stringify(records));
 }
 
 async function fetchText(path) {
@@ -53,6 +73,8 @@ async function boot() {
     }
     pyodide.runPython("import sys\nif '/home/pyodide' not in sys.path:\n    sys.path.insert(0, '/home/pyodide')");
     web = pyodide.pyimport("tarutaru.web_session");
+    coachMod = pyodide.pyimport("tarutaru.web_coach");
+    weights = JSON.parse(await fetchText("cnn_small.json"));
   } catch (error) {
     $("loading-text").textContent = `読み込めませんでした: ${error.message || error}`;
     return;
@@ -121,17 +143,27 @@ function bindControls() {
   $("undo").addEventListener("click", undo);
   $("finished-undo").addEventListener("click", undo);
   $("new-game").addEventListener("click", () => {
-    if (!state.done && state.moves > 0 && !confirm("今のゲームをやめて、新しいゲームを始めますか？")) return;
+    if (mode === "record" && state && !state.done && state.moves > 0 && !confirm("今のゲームをやめて、新しいゲームを始めますか？")) return;
     startGame();
   });
   $("next-game").addEventListener("click", startGame);
+  $("coach").addEventListener("click", startCoach);
+  $("record-mode").addEventListener("click", () => {
+    if (mode !== "coach") return;
+    if (!confirm("交代をやめて、記録用モードに戻りますか？")) return;
+    leaveCoach();
+  });
+  $("skip").addEventListener("click", skipCoach);
+  $("coach-next").addEventListener("click", nextCoachSeed);
   $("open-records").addEventListener("click", () => {
     renderRecords();
     $("records").classList.remove("hidden");
   });
   $("close-records").addEventListener("click", () => $("records").classList.add("hidden"));
-  $("export").addEventListener("click", exportRecords);
-  $("delete-exported").addEventListener("click", deleteExported);
+  $("export").addEventListener("click", () => exportStored(loadRecords, storeRecords, "tarutaru-human-records", "tarutaru_records"));
+  $("delete-exported").addEventListener("click", () => deleteExported(loadRecords, storeRecords, "完成局"));
+  $("export-repairs").addEventListener("click", () => exportStored(loadRepairs, storeRepairs, "tarutaru-repair-records", "tarutaru_repairs"));
+  $("delete-repairs").addEventListener("click", () => deleteExported(loadRepairs, storeRepairs, "交代の記録"));
 }
 
 function cellAt(event) {
@@ -143,6 +175,16 @@ function cellAt(event) {
 }
 
 function resumeOrStart() {
+  const coachText = localStorage.getItem(COACH_KEY);
+  if (coachText) {
+    try {
+      enterCoach(coachMod.resume_json(coachText));
+      return;
+    } catch (error) {
+      console.warn(error);
+      localStorage.removeItem(COACH_KEY);
+    }
+  }
   const text = localStorage.getItem(CURRENT_KEY);
   if (text) {
     try {
@@ -165,10 +207,92 @@ function setSession(next, saved) {
 }
 
 function startGame() {
+  localStorage.removeItem(COACH_KEY);
+  mode = "record";
+  releaseCoach();
   setSession(web.Session(), null);
 }
 
+function startCoach() {
+  if (mode === "record" && state && !state.done && state.moves > 0 && !confirm("今のゲームをやめて、方策と交代しますか？")) return;
+  if (session) {
+    session.destroy();
+    session = null;
+  }
+  localStorage.removeItem(CURRENT_KEY);
+  enterCoach(coachMod.CoachSession());
+}
+
+function leaveCoach() {
+  releaseCoach();
+  localStorage.removeItem(COACH_KEY);
+  startGame();
+}
+
+function releaseCoach() {
+  if (coach) coach.destroy();
+  coach = null;
+  mode = "record";
+}
+
+function enterCoach(next) {
+  releaseCoach();
+  mode = "coach";
+  coach = next;
+  chosen = null;
+  persist();
+  render();
+  advancePolicy();
+}
+
+function nextCoachSeed() {
+  if (mode !== "coach" || !coach) return;
+  coach.next_game();
+  persist();
+  render();
+  advancePolicy();
+}
+
+function skipCoach() {
+  if (mode !== "coach" || !coach || advancing || !coach.skip()) return;
+  persist();
+  render();
+  advancePolicy();
+}
+
+function sleep() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function advancePolicy() {
+  if (mode !== "coach" || !coach || advancing) return;
+  advancing = true;
+  $("policy").classList.remove("hidden");
+  try {
+    while (mode === "coach" && coach) {
+      const job = JSON.parse(coach.begin_policy_move_json());
+      if (job.kind !== "score") break;
+      const scores = TarutaruCnn.scoreBatch(job.planes, job.lines, job.count, weights);
+      coach.finish_policy_move_json(JSON.stringify(scores));
+      render();
+      await sleep();
+    }
+  } catch (error) {
+    notice = `方策が止まりました: ${error.message || error}`;
+  } finally {
+    advancing = false;
+    if (mode === "coach") $("policy").classList.add("hidden");
+    persist();
+    render();
+  }
+}
+
 function persist() {
+  if (mode === "coach" && coach) {
+    localStorage.setItem(COACH_KEY, coach.snapshot_json());
+    return;
+  }
+  if (!session) return;
   const data = JSON.parse(session.record_json());
   data.undo_left = JSON.parse(session.state_json()).undo_left;
   data.saved_id = savedId;
@@ -176,6 +300,16 @@ function persist() {
 }
 
 function slide(axis, index, towardStart) {
+  if (mode === "coach") {
+    if (!coach || advancing) return;
+    const result = JSON.parse(coach.slide_json(axis, index, towardStart));
+    if (result.repair) storeRepair(result.repair);
+    if (result.status === "rejected") flash("その本数は消せません");
+    persist();
+    render();
+    if (result.state.phase === "policy") advancePolicy();
+    return;
+  }
   if (state.done || !session.slide(axis, index, towardStart)) return;
   state = JSON.parse(session.state_json());
   if (state.done && savedId === null) saveFinished();
@@ -183,7 +317,34 @@ function slide(axis, index, towardStart) {
   render();
 }
 
+function storeRepair(repair) {
+  repair.code = version.code;
+  repair.finished_at = new Date().toISOString();
+  repair.id = `${repair.seed}-${Date.now()}`;
+  repair.exported = false;
+  const records = loadRepairs();
+  records.push(repair);
+  storeRepairs(records);
+}
+
+function flash(text) {
+  notice = text;
+  render();
+  setTimeout(() => {
+    if (notice === text) {
+      notice = "";
+      render();
+    }
+  }, 1200);
+}
+
 function undo() {
+  if (mode === "coach") {
+    if (!coach || advancing || !coach.undo()) return;
+    persist();
+    render();
+    return;
+  }
   if (!session.undo()) return;
   if (savedId !== null) {
     storeRecords(loadRecords().filter((record) => record.id !== savedId));
@@ -210,17 +371,26 @@ function seconds(frames, digits) {
 }
 
 function render() {
-  state = JSON.parse(session.state_json());
+  const coaching = mode === "coach" && coach;
+  state = JSON.parse(coaching ? coach.state_json() : session.state_json());
   $("score").textContent = state.score;
   $("lines").textContent = state.lines;
   $("time").textContent = seconds(state.time_left, 1);
   $("seed").textContent = `種 ${state.seed}`;
-  if (chosen) {
-    const row = seconds(session.wait_frames("row", chosen.row), 2);
-    const col = seconds(session.wait_frames("col", chosen.col), 2);
+  const player = coaching ? coach : session;
+  if (chosen && player) {
+    const row = seconds(player.wait_frames("row", chosen.row), 2);
+    const col = seconds(player.wait_frames("col", chosen.col), 2);
     $("wait").textContent = `待ち 行 ${row}秒 列 ${col}秒`;
   } else {
     $("wait").textContent = "マスに触れると待ちを表示";
+  }
+  if (coaching && state.phase === "human" && state.allowed) {
+    $("hint").textContent = notice || `${state.allowed}本を消す`;
+  } else if (coaching && state.phase === "finished") {
+    $("hint").textContent = state.reason || "終了";
+  } else {
+    $("hint").textContent = notice || "行は横に、列は縦にスワイプして寄せる";
   }
   for (let row = 0; row < SIZE; row++) {
     for (let col = 0; col < SIZE; col++) {
@@ -237,15 +407,44 @@ function render() {
   [...$("col-marks").children].forEach((mark, index) => mark.classList.toggle("on", index === state.col_cursor));
   [...$("row-marks").children].forEach((mark, index) => mark.classList.toggle("on", index === state.row_cursor));
 
+  const finished = coaching ? state.phase === "finished" : state.done;
   $("undo").textContent = `戻る (${state.undo_left})`;
-  $("undo").disabled = state.undo_left === 0 || state.done;
+  $("undo").disabled = advancing || state.undo_left === 0 || finished;
   $("finished-undo").disabled = state.undo_left === 0;
+  $("skip").classList.toggle("hidden", !coaching);
+  $("skip").disabled = advancing || !state.can_skip;
+  $("new-game").classList.toggle("hidden", coaching);
+  $("coach").classList.toggle("hidden", coaching);
+  $("record-mode").classList.toggle("hidden", !coaching);
   const waiting = loadRecords().filter((record) => !record.exported).length;
-  $("open-records").textContent = waiting ? `記録 (${waiting})` : "記録";
+  const repairWaiting = loadRepairs().filter((record) => !record.exported).length;
+  const waitingTotal = waiting + repairWaiting;
+  $("open-records").textContent = waitingTotal ? `記録 (${waitingTotal})` : "記録";
 
-  $("finished").classList.toggle("hidden", !state.done);
+  $("finished").classList.toggle("hidden", !finished);
+  $("finished-title").textContent = coaching && state.reason === "流れから外れました" ? "流れから外れました" : "終了";
   $("final-score").textContent = state.score;
-  $("final-note").textContent = savedId !== null ? "スマホに保存しました" : "";
+  $("final-note").textContent = coaching ? "" : savedId !== null ? "スマホに保存しました" : "";
+  $("finished-undo").classList.toggle("hidden", coaching);
+  $("next-game").classList.toggle("hidden", coaching);
+  $("coach-next").classList.toggle("hidden", !coaching);
+  if (coaching && advancing) {
+    $("policy-text").textContent = `方策が進めています\n最後の得点から ${state.since_score}/${state.policy_moves} 手`;
+  }
+}
+
+function renderRecords() {
+  const records = loadRecords();
+  const repairs = loadRepairs();
+  const waiting = records.filter((record) => !record.exported).length;
+  const repairWaiting = repairs.filter((record) => !record.exported).length;
+  $("records-summary").textContent =
+    `完成局 ${records.length} 件（未書き出し ${waiting} 件）\n交代の記録 ${repairs.length} 件（未書き出し ${repairWaiting} 件）`;
+  $("export").disabled = records.length === 0;
+  $("delete-exported").disabled = records.length === waiting;
+  $("export-repairs").disabled = repairs.length === 0;
+  $("delete-repairs").disabled = repairs.length === repairWaiting;
+  $("version").textContent = `ゲームのコード ${version.code} ・ 組み立て ${version.build}`;
 }
 
 function renderRecords() {
@@ -263,17 +462,17 @@ function stamp() {
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
 
-async function exportRecords() {
-  const records = loadRecords();
+async function exportStored(load, store, format, stem) {
+  const records = load();
   if (records.length === 0) return;
   const payload = {
-    format: "tarutaru-human-records",
+    format,
     code: version.code,
     build: version.build,
     exported_at: new Date().toISOString(),
     records: records.map(({ id, exported, ...record }) => record),
   };
-  const name = `tarutaru_records_${stamp()}.json`;
+  const name = `${stem}_${stamp()}.json`;
   const file = new File([JSON.stringify(payload)], name, { type: "application/json" });
   try {
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -290,17 +489,17 @@ async function exportRecords() {
     return;
   }
   const done = new Set(records.map((record) => record.id));
-  storeRecords(loadRecords().map((record) => (done.has(record.id) ? { ...record, exported: true } : record)));
+  store(load().map((record) => (done.has(record.id) ? { ...record, exported: true } : record)));
   renderRecords();
   render();
 }
 
-function deleteExported() {
-  const records = loadRecords();
+function deleteExported(load, store, label) {
+  const records = load();
   const exported = records.filter((record) => record.exported).length;
   if (exported === 0) return;
-  if (!confirm(`書き出した記録 ${exported} 件をスマホから消します。PC に取り込んだことを確かめてから消してください。`)) return;
-  storeRecords(records.filter((record) => !record.exported));
+  if (!confirm(`書き出した${label} ${exported} 件をスマホから消します。PC に取り込んだことを確かめてから消してください。`)) return;
+  store(records.filter((record) => !record.exported));
   renderRecords();
   render();
 }
