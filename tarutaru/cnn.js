@@ -1,6 +1,6 @@
 "use strict";
 
-// 小さい CNN の点付け。web_cnn.py と同じ式。重みは cnn_small.json。
+// 小さい CNN の点付け。web_cnn.py と同じ式。重みは強化学習した cnn_small.json。向きは平均しない。
 
 function conv(src, weight, bias, inCh, outCh) {
   const size = 6;

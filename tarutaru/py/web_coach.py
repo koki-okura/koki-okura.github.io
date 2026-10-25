@@ -218,40 +218,28 @@ def encode_planes(after: Position, frames: int) -> list[float]:
 
 
 def score_inputs(position: Position) -> tuple[list[float], list[float]]:
-    """8つの対称と24手の平面。点の並びは、対称ごとに元の手の番号順である。"""
+    """今の向きの24手の平面。点の並びは手の番号順。"""
 
     planes: list[float] = []
-    for symmetry in range(N_SYMMETRIES):
-        transformed = transform_position(position, symmetry)
-        for index in range(N_ACTIONS):
-            action = action_from_index(transform_action_index(index, symmetry))
-            after = transformed.after_pack(action)
-            planes.extend(encode_planes(after, transformed.time_left - after.time_left))
+    for index in range(N_ACTIONS):
+        action = action_from_index(index)
+        after = position.after_pack(action)
+        planes.extend(encode_planes(after, position.time_left - after.time_left))
     return planes, lines_features(position.lines_cleared)
-
-
-def mean_scores(scores: list[float]) -> list[float]:
-    if len(scores) != N_SYMMETRIES * N_ACTIONS:
-        raise RuntimeError("点の数が、対称と手の数に合いません")
-    totals = [0.0] * N_ACTIONS
-    for symmetry in range(N_SYMMETRIES):
-        start = symmetry * N_ACTIONS
-        for index in range(N_ACTIONS):
-            totals[index] += scores[start + index]
-    return [value / N_SYMMETRIES for value in totals]
 
 
 def choose_index(position: Position, seen: set | None, scores: list[float]) -> int:
     allowed = masked_indices(position, seen)
     if not allowed:
         raise RuntimeError("タルが動く操作がありません")
-    averaged = mean_scores(scores)
+    if len(scores) != N_ACTIONS:
+        raise RuntimeError("点の数が手の数に合いません")
     best = allowed[0]
-    best_score = averaged[best]
+    best_score = scores[best]
     for index in allowed[1:]:
-        if averaged[index] > best_score:
+        if scores[index] > best_score:
             best = index
-            best_score = averaged[index]
+            best_score = scores[index]
     return best
 
 
@@ -342,7 +330,7 @@ class CoachSession:
         position = self.game.visible()
         planes, lines = score_inputs(position)
         self._pending = {"position": position, "seen": set(self.seen)}
-        return {"kind": "score", "planes": planes, "lines": lines, "count": N_SYMMETRIES * N_ACTIONS}
+        return {"kind": "score", "planes": planes, "lines": lines, "count": N_ACTIONS}
 
     def finish_policy_move(self, scores: list[float]) -> None:
         pending = self._pending
